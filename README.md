@@ -16,7 +16,7 @@ samsoa.execute()
 ```
 
 ## Hasil Simulasi
-gif
+![Simulasi](https://github.com/avidito/msamsoa/blob/master/media/simulation.gif)
 
 kiri: SAMSOA, kanan: konvensional (gerak zig-zag)
 
@@ -28,15 +28,16 @@ dengan:
 ## Analisis Hasil
 
 ### Waktu Total Penyelesaian Tugas
-Grafik
+![Waktu Penyelesaian](https://github.com/avidito/msamsoa/blob/master/media/waktu-penyelesaian-sc1.png)
 
 Waktu penyelesaian dari SAMSOA selalu lebih cepat dibandingkan dengan waktu penyelesaian metode konvensional (ZS). Dengan kasus terdapat kerusakan UAV, performa dari SAMSOA lebih baik dari metode konvensional ketika menggunakan lebih dari 6 UAV. Metode konvensional dengan kerusakan tidak dapat menyelesaikan misi.
 
 ### Persentase Penyelesaian pada Kasus dengan Kerusakan UAV
-Grafik
+![Persentase Penyelesaian](https://github.com/avidito/msamsoa/blob/master/media/persentase-penyelesaian-sc1.png)
 
 Grafik merupakan hasil analisis dari pengujian dengan kerusakan UAV mencapai 30% dari seluruh UAV pada setiap simulasi. SAMSOA selalu dapat mencapai menyelesaikan tugas walaupun terdapat UAV yang rusak. Metode konvensional tidak dapat menyelesaikan tugas karena terdapat beberapa daerah yang tidak dapat diselesaikan oleh UAV rusak.
 
 ## Referensi
 [1] Gao C, Zhen Z, dan Gong H. 2016. A self-organized search and attack algorithm for multiple unmanned aerial vehicles. Aerospace Science and Technology, 54, 229–240. doi:10.1016/j.ast.2016.03.022.
+
 [2] Avellar GSC, Pereira GSA, Pimenta LCA, Iscold P. 2015. Multi-UAV Routing Area and Remote Sensing with Minimum Time. Sensors. 15(11): 27783-27803. doi:10.3390/s151127783.
