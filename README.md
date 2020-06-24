@@ -1,3 +1,5 @@
-# Modified SAMSOA for Crop Field Surveillance and Fertilization
+# Modified-SAMSOA pada Multi-UAV untuk *Surveillance* dan Pemupukan Lahan Pertanian
 
-Modifikasi dari Search-Attack Self-Organized Algorithm (SAMSOA) yang dikembangkan oleh Gao *et al.* (2016) untuk tugas *surveillance* dan pemupukan lahan pertanian.
+Skripsi
+
+Modifikasi dari Search-Attack Self-Organized Algorithm (SAMSOA) yang dikembangkan oleh Gao *et al.* (2016) untuk tugas *surveillance* dan pemupukan lahan pertanian dengan multi-UAV.
