@@ -1,6 +1,11 @@
 # Modified-SAMSOA pada Multi-UAV untuk *Surveillance* dan Pemupukan Lahan Pertanian
 
-Skripsi
+**Skripsi untuk S.Kom di IPB**
+**dibimbing oleh:**
+- Dr. Medria Kusuma Dewi Hardhienata, SKomp
+- Dr. Karlisa Priandana, ST MEng
+
+## Deskripsi
 
 Modifikasi Search-Attack Self-Organized Algorithm (SAMSOA) dari penelitian [1] untuk tugas *surveillance* dan pemupukan lahan pertanian dengan multi-UAV. UAV direpresentasikan sebagai titik dalam ruang pencarian diskrit. Pergerakan UAV dikoordinasikan dengan Ant Colony Optimization terdistribusi. Modifikasi dilakukan pada representasi target, penyederhanaan pergerakan UAV, dan penyederhanaan perhitungan. Implementasi algoritma memungkinkan pengujian kasus dengan kerusakan UAV pada saat misi berjalan. Metode dibandingkan dengan modifikasi dari metode konvensional yang terinspirasi dari penelitian [2].
 
