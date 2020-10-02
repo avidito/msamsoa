@@ -1,5 +1,8 @@
+import sys
+sys.path.append('..')
+
 import numpy as np
-from msamsoa.utils.tracker import Tracker
+from utils.tracker import Tracker
 from queue import Queue
 
 class SAMSOA_Agent:
