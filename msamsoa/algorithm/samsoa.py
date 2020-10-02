@@ -201,7 +201,7 @@ class SAMSOA_Problem:
         target_list = []
         broken_agents = []
         tracker = Tracker(self.size, self.nt)
-        agent_info = agent_info = [ (agent.position, agent.mission) for agent in self.agents]
+        agent_info = [ (agent.position, agent.mission) for agent in self.agents]
         tracker.update(0, vmap, emap, ni, agent_info, simulation)
         while((srate < self.size or ni < self.nt) and iteration < max_iteration):
             iteration += 1

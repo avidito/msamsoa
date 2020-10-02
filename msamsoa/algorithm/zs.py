@@ -83,7 +83,7 @@ class ZS_Problem:
         return [(start[0] + dy, start[1] + dx) for (dy, dx) in t]
 
     # Menyelesaikan Masalah
-    def execute(self, show=0, simulation=False, max_iter=np.inf):
+    def execute(self, show=0, simulation=False, max_iteration=np.inf):
         nw, nl = self.boundary
         emap = self.e.copy()
         vmap = np.zeros((nw, nl), np.bool)
@@ -95,7 +95,7 @@ class ZS_Problem:
         agent_info = agent_info = [ (agent.position, agent.mission) for agent in self.agents]
         tracker.update(0, vmap, emap, ni, agent_info, simulation)
         done = 0
-        while(((srate < self.size) or (ni < self.nt)) and iteration < max_iter and done < self.na):
+        while(((srate < self.size) or (ni < self.nt)) and iteration < max_iteration and done < self.na):
             iteration += 1
 
             for agent in self.agents:
@@ -147,7 +147,6 @@ class ZS_Problem:
                         agent.localFertilization()
 
             srate = sum(sum(vmap))
-            self.em = emap.copy()
 
             agent_info = agent_info = [ (agent.position, agent.mission) for agent in self.agents]
             tracker.update(iteration, vmap, emap, ni, agent_info, simulation)
