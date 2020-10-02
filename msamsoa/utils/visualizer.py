@@ -35,10 +35,15 @@ def generateColorbar(ax, plot, ticks, width="5%", height="100%", loc='lower left
 def showScenarios(scenarios, lcm=f_lcm, norm=f_norm):
     fig, axes = plt.subplots(1, len(scenarios), figsize=(4*len(scenarios),4))
 
-    for (ax, sce) in zip(axes, scenarios):
-        plt.setp(ax, xticks=[], yticks=[])
-        plot = ax.imshow(sce, cmap=lcm, norm=norm, vmin=0, vmax=1)
-        generateColorbar(ax, plot, [0,1])
+    if(len(scenarios) == 1):
+        plt.setp(axes, xticks=[], yticks=[])
+        plot = axes.imshow(scenarios[0], cmap=lcm, norm=norm, vmin=0, vmax=1)
+        generateColorbar(axes, plot, [0,1])
+    else:
+        for (ax, sce) in zip(axes, scenarios):
+            plt.setp(ax, xticks=[], yticks=[])
+            plot = ax.imshow(sce, cmap=lcm, norm=norm, vmin=0, vmax=1)
+            generateColorbar(ax, plot, [0,1])
 
 ## Membuat Animasi dengan Peta Pemupukan
 def generateSimulationFertilized(s_tracker, z_tracker, iteration=None, lcm=f_lcm, norm=f_norm):
