@@ -1,10 +1,13 @@
-from msamsoa.solution import Solution
+import numpy as np
+from numpy import random
+
+from msamsoa.solution import Solution, Agent
 
 class MSAMSOA(Solution):
     """
     Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
 
-    Params:
+    Init Params:
     - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
     - agent_cnt: int; Total number of agents (UAV) for implementation.
     - a: float (default = 0.7);
@@ -14,9 +17,9 @@ class MSAMSOA(Solution):
     - dtg0: float (default = 1.0);
     - ht: int (default = 10);
     """
-    def __init__(self, space, agent_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
+    def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
         super().__init__(space)
-        self.agent_cnt = agent_cnt
+        self.agents_cnt = agents_cnt
         self.params = {
             "a": a,
             "b": b,
@@ -26,21 +29,48 @@ class MSAMSOA(Solution):
             "ht": ht
         }
         self.name = "MSAMSOA"
+        self.init_agents()
 
-        # self.agents = self.init_agents(space)
+    def init_agents(self):
+        self.agents = [
+            MSAMSOA_Agent(i, self.boundary, self.params["a"], self.params["b"])
+            for i in range(1, self.agents_cnt+1)
+        ]
+        self.random_pos_agents()
 
-    # # Inisiasi Kelas
-    # def __init__(self, env, na, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
-    #     self.e = env.copy()
-    #     self.boundary = env.shape
-    #     self.size = env.shape[0] * env.shape[1]
-    #     self.nt = self.size - sum(sum(env))
-    #     self.params = (a, b, d, dtl0, dtg0, ht)
-    #     self.na = na
-    #     self.agents = [ SAMSOA_Agent(i, a, b, env.shape) for i in range(1,na+1) ]
-    #     self.randomPut()
-    #
-    #     self.name = 'SAMSOA'
+    def random_pos_agents(self):
+        boundary = self.boundary[0]
+        min_dist = boundary // self.agents_cnt # Minimal distance with other agent
+        bot_left, top_right = (-1, self.boundary[0])
+        positions = []
+        for agent in self.agents:
+            dist = 0
+            while (dist < min_dist):
+                side = bot_left if (random.randint(2)) else top_right # Bot/Left or Top/Right side
+                loc = random.randint(boundary-1) # Location between Boundary
+                agent_pos = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
+
+                dist = min(list(map(lambda x: np.linalg.norm(agent_pos - x), positions))) if (positions) else np.inf
+
+            agent.position = agent_pos
+            positions.append(agent_pos)
+
+
+class MSAMSOA_Agent(Agent):
+    """
+    MSAMSOA agent, or UAV representation for MSAMSOA solution.
+
+    Init Params:
+    """
+    def __init__(self, idx, boundary, a, b):
+        super().__init__(idx, boundary)
+        self.params = {
+            "a": a,
+            "b": b
+        }
+        self.mission = 0
+        self.hungry_point = 0
+        self.hungry_state = False
 
 # import numpy as np
 # from msamsoa.utils.tracker import Tracker
@@ -50,11 +80,6 @@ class MSAMSOA(Solution):
 #
 #     # Inisiasi Kelas
 #     def __init__(self, i, a, b, boundary):
-#         self.i = i
-#         self.params = (a, b)
-#         self.position = None
-#         self.direction = None
-#         self.power = np.inf
 #
 #         self.mission = 0
 #         self.hpoint = 0

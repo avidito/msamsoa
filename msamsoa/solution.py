@@ -8,6 +8,9 @@ Include:
     - Agent (class): Base class for agent entity
 """
 
+import numpy as np
+
+
 class Solution:
     """
     Solution Base Class
@@ -20,3 +23,18 @@ class Solution:
         self.size = (space.shape[0] * space.shape[1])
         self.target_cnt = self.size - sum(sum(space))
         self.name = "__BASE__"
+
+class Agent:
+    """
+    Solution Base Agent
+
+    Defining basic agent for solution's agents blueprint.
+    """
+
+    def __init__(self, idx, boundary):
+        self.id = idx
+        self.boundary = boundary
+
+        self.position = None
+        self.direction = None
+        self.power = np.inf
