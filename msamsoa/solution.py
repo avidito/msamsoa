@@ -9,6 +9,7 @@ Include:
 """
 
 import numpy as np
+import logging
 
 
 class Solution:
@@ -18,6 +19,7 @@ class Solution:
     Defining problem space and general information about mission.
     """
     def __init__(self, space):
+        logging.info("Initialize Solution Space")
         self.space = space
         self.boundary = space.shape[0]
         self.size = space.shape[0] ** 2

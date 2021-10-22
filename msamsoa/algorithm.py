@@ -2,6 +2,10 @@ import numpy as np
 from numpy import random
 
 from msamsoa.solution import Solution, Agent
+from msamsoa.tracker import init_logger
+
+import logging
+init_logger()
 
 class MSAMSOA(Solution):
     """
@@ -21,6 +25,8 @@ class MSAMSOA(Solution):
     ##### Initiation Methods #####
     def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
         super().__init__(space)
+        logging.info("Solution space update: Using MSAMSOA Algorithm")
+
         self.agents_cnt = agents_cnt
         self.params = {
             "a": a,
@@ -31,7 +37,11 @@ class MSAMSOA(Solution):
             "ht": ht
         }
         self.name = "MSAMSOA"
+
+        logging.info("Populate agents with: count=%d; a=%.2f; b=%d", agents_cnt, a, b)
         self.init_agents()
+
+        logging.info("Space initialization and agents distribution is finish successfully")
 
     def __repr__(self):
         return ("SAMSOA Simulation. Agents:{}, a:{a}, b:{b}, d:{d}, dtl0:{dtl0}, dtg0:{dtg0}, ht:{ht}."
@@ -120,7 +130,7 @@ class MSAMSOA(Solution):
 
             # Surveillance mission
             for agent in surveillance_agents:
-                origin, destination = agent.move()
+                # origin, destination = agent.move()
                 # occupied_field[origin] = False
                 # occupied_field[destination] = True
 
