@@ -17,6 +17,8 @@ class MSAMSOA(Solution):
     - dtg0: float (default = 1.0);
     - ht: int (default = 10);
     """
+
+    ##### Initiation Methods #####
     def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
         super().__init__(space)
         self.agents_cnt = agents_cnt
@@ -30,6 +32,10 @@ class MSAMSOA(Solution):
         }
         self.name = "MSAMSOA"
         self.init_agents()
+
+    def __repr__(self):
+        return ("SAMSOA Simulation. Agents:{}, a:{a}, b:{b}, d:{d}, dtl0:{dtl0}, dtg0:{dtg0}, ht:{ht}."
+                ).format(self.agents_cnt, *(self.params))
 
     def init_agents(self):
         self.agents = [
@@ -56,11 +62,134 @@ class MSAMSOA(Solution):
             agent.position = pos
             assigned_positions.append(pos)
 
+    ##### Execution Methods #####
+    def execute(self, max_iteration=np.inf, level="debug", track_process=True, track_path="track"):
+        """
+        Main execution method
+
+        Params:
+        - max_iteration: int (default = inf); Max iteration for algorithm to run.
+        - level: str [option: "debug", "error", "silent"] (default = "debug"); Debugging level.
+        - track_process: boolean (default = True); Track information per iteration and export to progress file.
+        - log_path: str (default = "track_path"); Path to log file.
+        """
+        bound = self.boundary
+        ht = self.params["ht"]
+        space_field = self.space.copy()
+        visited_field = np.zeros((bound, bound), np.bool)
+        # amap = np.ones((nw, nl), np.bool)
+
+        iteration = 0
+        detected_targets = []
+        broken_agents = []
+        for agent in self.agents:
+            agent.set_mission("surveillance")
+        # tracker = Tracker(self.size, self.nt)
+        # agent_info = [ (agent.position, agent.mission) for agent in self.agents]
+        # tracker.update(0, vmap, emap, ni, agent_info, simulation)
+
+        while(
+            (sum(sum(space_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
+            and iteration < max_iteration                           # or iteration lower than max_iteration
+        ):
+            iteration += 1
+
+            surveillance_agents = [agent for agent in self.agents if (agent.mission == "surveillance")]
+            fertilization_agents = [agent for agent in self.agents if (agent.mission == "fertilization")]
+
+            # Reduce agents power
+            for agent in self.agents:
+                agent.reduce_power(1)
+                #     search_agents = []
+                #     for agent in self.agents:
+                #
+                #         if(agent.power):
+                #             agent.power -= 1
+                #             if(agent.power == 0):
+                #                 agent.mission = 2
+                #                 y, x = agent.position
+                #                 amap[y,x] = True
+                #
+                #         # Misi Search
+                #         if(agent.mission == 0):
+                #             search_agents.append(agent.i)
+                #
+                #             oy, ox = agent.position
+                #             direction = self.unvisitedDirection(agent.position, vmap, emap) if agent.hungry else None
+                #             y, x = agent.search(amap, vmap, direction)
+                #             if(oy >= 0 and oy <= nw-1 and ox >= 0 and ox <= nl-1):
+                #                 amap[oy, ox] = True
+                #             amap[y, x] = False
+                #
+                #             # Identifikasi Daerah
+                #             new_grid = 0
+                #             for dy in [-2, -1, 0, 1, 2]:
+                #                 for dx in [-2, -1, 0, 1, 2]:
+                #                     ny = y + dy
+                #                     nx = x + dx
+                #                     if(ny >= 0 and ny <= nw-1 and nx >= 0 and nx <= nl-1 and vmap[ny,nx] == False):
+                #                         vmap[ny,nx] = True
+                #                         new_grid += 1
+                #                         if(emap[ny,nx] == False and [ny,nx] not in target_list):
+                #                             target_list.append((ny,nx))
+                #             agent.hpoint = agent.hpoint + 1 if new_grid == 0 else 0
+                #             agent.hungry = True if agent.hpoint > ht else False
+                #
+                #         # Misi Attack
+                #         elif(agent.mission == 1):
+                #             y, x = agent.position
+                #             emap[y, x] = True
+                #             target_list.remove((y, x))
+                #             for a in self.agents:
+                #                 a.cp[y, x] = 0
+                #             ni += 1
+                #             agent.mission = 0
+                #
+                #         # Agen Rusak
+                #         elif(agent.mission == 2):
+                #             y, x = agent.position
+                #             if(agent.i not in broken_agents):
+                #                 broken_agents.append(agent.i)
+                #                 amap[y, x] = True
+                #
+                #     # Memperbaharui Nilai Feromon
+                #     self.updatePheromone(search_agents, target_list)
+                #
+                #     # Memilih Misi Selanjutnya untuk Tiap Agen
+                #     for agent in self.agents:
+                #         y, x = agent.position
+                #         if (agent.mission != 2):
+                #             if emap[y,x]:
+                #                 agent.mission = 0
+                #             else:
+                #                 agent.mission = 1
+                #                 agent.hungry = False
+                #                 agent.hpoint = 0
+                #
+                #     # Memperbaharui Nilai Srate dan Frate
+                #     srate = sum(sum(vmap))
+                #
+                #     agent_info = [ (agent.position, agent.mission) for agent in self.agents]
+                #     tracker.update(iteration, vmap, emap, ni, agent_info, simulation)
+                #
+                #     print(("Iteration {}. Srate:{:5.2f}%. Frate:{:5.2f}%"
+                #           ).format(iteration, (srate/self.size)*100, (ni/self.nt)*100)) if show >= 1 else None
+                #     if show >= 2:
+                #         for agent in self.agents:
+                #             print(("Agent-{}. Mission:{}. Position:({:2},{:2}). Hungry:{}"
+                #                   ).format(agent.i, agent.mission, *(agent.position), agent.hungry))
+                #         print('')
+                # self.tracker = tracker
+
 class MSAMSOA_Agent(Agent):
     """
     MSAMSOA agent, or UAV representation for MSAMSOA solution.
 
     Init Params:
+    - idx: int; Unique identifier for each agents.
+    - boundary: int; Boundary location (x or y axis) of space field.
+    - a: float;
+    - b: float;
     """
     def __init__(self, idx, boundary, a, b):
         super().__init__(idx, boundary)
@@ -68,9 +197,19 @@ class MSAMSOA_Agent(Agent):
             "a": a,
             "b": b
         }
-        self.mission = 0
+        self.mission = None
         self.hungry_point = 0
         self.hungry_state = False
+        self.power = 100
+
+    def set_mission(self, mission):
+        self.mission = mission
+
+    def reduce_power(self, power):
+        if (self.mission):
+            self.power -= 1
+            if (self.power <= 0):
+                self.mission = None # Broken/Dead
 
 # import numpy as np
 # from msamsoa.utils.tracker import Tracker
