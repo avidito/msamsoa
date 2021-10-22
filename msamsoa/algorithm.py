@@ -39,22 +39,22 @@ class MSAMSOA(Solution):
         self.random_pos_agents()
 
     def random_pos_agents(self):
-        boundary = self.boundary[0]
-        min_dist = boundary // self.agents_cnt # Minimal distance with other agent
-        bot_left, top_right = (-1, self.boundary[0])
-        positions = []
+        assigned_positions = []
+        min_dist = self.boundary // self.agents_cnt # Minimal distance with other agent
         for agent in self.agents:
             dist = 0
             while (dist < min_dist):
-                side = bot_left if (random.randint(2)) else top_right # Bot/Left or Top/Right side
-                loc = random.randint(boundary-1) # Location between Boundary
-                agent_pos = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
+                side = -1 if (random.randint(2)) else self.boundary # Bot/Left or Top/Right side
+                loc = random.randint(self.boundary) # Location between Boundary
+                pos = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
 
-                dist = min(list(map(lambda x: np.linalg.norm(agent_pos - x), positions))) if (positions) else np.inf
+                # Calculate minimum distance to other agents
+                dist = min(list(
+                    map(lambda p: np.linalg.norm(pos - p), assigned_positions)
+                )) if (assigned_positions) else np.inf
 
-            agent.position = agent_pos
-            positions.append(agent_pos)
-
+            agent.position = pos
+            assigned_positions.append(pos)
 
 class MSAMSOA_Agent(Agent):
     """

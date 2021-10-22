@@ -19,8 +19,8 @@ class Solution:
     """
     def __init__(self, space):
         self.space = space
-        self.boundary = space.shape
-        self.size = (space.shape[0] * space.shape[1])
+        self.boundary = space.shape[0]
+        self.size = space.shape[0] ** 2
         self.target_cnt = self.size - sum(sum(space))
         self.name = "__BASE__"
 
