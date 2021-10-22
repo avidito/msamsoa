@@ -1,12 +1,8 @@
-"""
-Solution with MSAMSOA Implementation
-"""
-
 from msamsoa.solution import Solution
 
 class MSAMSOA(Solution):
     """
-    Modified
+    Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
 
     Params:
     - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
