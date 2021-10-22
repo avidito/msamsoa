@@ -50,17 +50,32 @@ class MSAMSOA(Solution):
         for agent in self.agents:
             dist = 0
             while (dist < min_dist):
-                side = -1 if (random.randint(2)) else self.boundary # Bot/Left or Top/Right side
-                loc = random.randint(self.boundary) # Location between Boundary
-                pos = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
+                position = MSAMSOA.get_position(self.boundary)
+                direction = MSAMSOA.get_direction(position, self.boundary)
 
                 # Calculate minimum distance to other agents
                 dist = min(list(
-                    map(lambda p: np.linalg.norm(pos - p), assigned_positions)
+                    map(lambda p: np.linalg.norm(position - p), assigned_positions)
                 )) if (assigned_positions) else np.inf
 
-            agent.position = pos
-            assigned_positions.append(pos)
+            agent.position = position
+            agent.direction = direction
+            assigned_positions.append(position)
+
+    @staticmethod
+    def get_position(boundary):
+        side = -1 if (random.randint(2)) else boundary # Bot/Left or Top/Right side
+        loc = random.randint(boundary) # Location between Boundary
+        position = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
+        return position
+
+    @staticmethod
+    def get_direction(position, boundary):
+        if (position[0] == -1): direction = (1, 0)
+        elif (position[1] == -1): direction = (0, 1)
+        elif (position[0] == boundary): direction = (-1, 0)
+        elif (position[1] == boundary): direction = (0, -1)
+        return direction
 
     ##### Execution Methods #####
     def execute(self, max_iteration=np.inf, level="debug", track_process=True, track_path="track"):
@@ -76,8 +91,8 @@ class MSAMSOA(Solution):
         bound = self.boundary
         ht = self.params["ht"]
         space_field = self.space.copy()
-        visited_field = np.zeros((bound, bound), np.bool)
-        # amap = np.ones((nw, nl), np.bool)
+        visited_field = np.zeros((bound, bound), bool)
+        occupied_field = np.zeros((bound, bound), bool)
 
         iteration = 0
         detected_targets = []
@@ -94,12 +109,27 @@ class MSAMSOA(Solution):
         ):
             iteration += 1
 
+            # Grouping agent by mission
             surveillance_agents = [agent for agent in self.agents if (agent.mission == "surveillance")]
             fertilization_agents = [agent for agent in self.agents if (agent.mission == "fertilization")]
+
+            # Fertilization
+            for agent in fertilization_agents:
+                agent.fertilize()
+                agent.set_mission("surveillance")
+
+            # Surveillance mission
+            for agent in surveillance_agents:
+                origin, destination = agent.move()
+                # occupied_field[origin] = False
+                # occupied_field[destination] = True
+
+                agent.surveillance()
 
             # Reduce agents power
             for agent in self.agents:
                 agent.reduce_power(1)
+
                 #     search_agents = []
                 #     for agent in self.agents:
                 #
@@ -202,6 +232,7 @@ class MSAMSOA_Agent(Agent):
         self.hungry_state = False
         self.power = 100
 
+    ##### State #####
     def set_mission(self, mission):
         self.mission = mission
 
@@ -210,6 +241,18 @@ class MSAMSOA_Agent(Agent):
             self.power -= 1
             if (self.power <= 0):
                 self.mission = None # Broken/Dead
+
+    ##### Navigation #####
+    def move(self):
+        pass
+
+    ##### Surveillance #####
+    def surveillance(self):
+        pass
+
+    ##### Fertilization #####
+    def fertilize(self):
+        pass
 
 # import numpy as np
 # from msamsoa.utils.tracker import Tracker

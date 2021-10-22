@@ -38,3 +38,4 @@ class Agent:
         self.position = None
         self.direction = None
         self.power = np.inf
+        self.move_direction = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
