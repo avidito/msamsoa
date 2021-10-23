@@ -2,14 +2,14 @@ import numpy as np
 from numpy import random
 
 from msamsoa.solution import Solution, Agent
-from msamsoa.tracker import init_logger
+from msamsoa.tracker import init_logger, Tracker
 
 import logging
 init_logger()
 
 class MSAMSOA(Solution):
     """
-    Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
+    MSAMSOA: Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
 
     Init Params:
     - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
@@ -109,7 +109,8 @@ class MSAMSOA(Solution):
         broken_agents = []
         for agent in self.agents:
             agent.set_mission("surveillance")
-        # tracker = Tracker(self.size, self.nt)
+
+        tracking = Tracker()
         # agent_info = [ (agent.position, agent.mission) for agent in self.agents]
         # tracker.update(0, vmap, emap, ni, agent_info, simulation)
 

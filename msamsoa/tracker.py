@@ -9,6 +9,7 @@ Include:
 
 import argparse
 import logging
+import os
 
 levels = {
     "debug": logging.DEBUG,
@@ -42,7 +43,23 @@ def init_logger():
         level = level
     )
 
-# class Tracker:
+class Tracker:
+    """
+    Tracker: Progress Information Handler
+
+    Object to handle mission progress information tracking. Focus on tracking agent movement and completion rate. By default, all tracking information will be exported into result folder.
+
+    Init Params:
+    - track_dir: string (default = "track"); Path for track result directory. Automatically create directory if not exists.
+    """
+
+    def __init__(self, track_dir="track"):
+        logging.debug("Initialize Tracker with: track_dir='%s'", track_dir)
+        if (not os.path.exists(track_dir)):
+            logging.debug("Creating result directory at: '%s'", track_dir)
+            os.makedirs(track_dir)
+
+        self.dir = track_dir
 #
 #     # Inisiasi Kelas
 #     def __init__(self, size, nt):
