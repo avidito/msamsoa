@@ -42,26 +42,19 @@ class Visualizer:
                 p += 1
             except StopIteration:
                 break
-        Visualizer.visualize_field(fertilized, title="Fertilization Progress")
-
+        completion_rate = {"surveillance": 0.08, "fertilization": 0.05} # Placeholder
+        agent_cnt = 10 # Placholder
+        Visualizer.visualize_field(fertilized, completion_rate, agent_cnt, iteration=p-1)
 
     @staticmethod
-    def visualize_field(data, title=None):
-        """
-        Visualize individual space.
-
-        Params:
-        - data: numpy.array; Space data to be visualized.
-        - title: string (default=None); Set title of visualization.
-        """
+    def visualize_field(data, completion_rate, agent_cnt, iteration=0):
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
-        if (title):
-            viz.axes.set_title(title)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
-        divider = make_axes_locatable(viz.axes)
 
+        divider = make_axes_locatable(viz.axes)
         Visualizer.visualize_colorbar(divider)
+        Visualizer.visualize_progress_rate(viz.axes, completion_rate, agent_cnt, iteration)
         plt.show()
 
     ##### Visualizer Utils #####
@@ -114,6 +107,16 @@ class Visualizer:
             which="minor",
             bottom=False
         )
+
+    @staticmethod
+    def visualize_progress_rate(ax, completion_rate, agents_cnt, iteration):
+        s_rate = completion_rate.get("surveillance", 0) * 100
+        f_rate = completion_rate.get("fertilization", 0) * 100
+        title = (
+            f"Iteration   : {iteration:4} {' ' * 21}Active UAV : {agents_cnt:3}\n"
+            f"Surveillance: {s_rate:6.2f}%{' ' * 12}Fertilization: {f_rate:6.2f}%"
+        )
+        ax.set_title(title, {"fontsize": 10}, loc="left")
 
 # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # from matplotlib.colors import ListedColormap, BoundaryNorm
