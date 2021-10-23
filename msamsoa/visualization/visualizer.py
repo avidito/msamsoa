@@ -8,6 +8,9 @@ Include:
 """
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.ticker import FixedLocator
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 class Visualizer:
@@ -17,17 +20,72 @@ class Visualizer:
     Init Params:
     - cmap: string (default = "gray"); Plotting colormap.
     """
-    def __init__(self, cmap="gray"):
-        self.cmap = cmap
-
     ##### Main Methods #####
     def visualize_field(self, data, title=None):
-        viz = plt.imshow(data, interpolation="none", cmap=self.cmap, vmin=-1, vmax=1)
+        """
+        Visualize individual space.
+
+        Params:
+        - data: numpy.array; Space data to be visualized.
+        - title: string (default=None); Set title of visualization.
+        """
+        viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
         if (title):
             viz.axes.set_title(title)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
+        divider = make_axes_locatable(viz.axes)
+
+        self.visualize_colorbar(divider)
         plt.show()
+
+    ##### Visualizer Utils #####
+    def visualize_colorbar(self, divider):
+        """
+        Visualize colorbar to give information about fertilized/unfertilized zone.
+        """
+        # Get dicrete colormap
+        [cmap, norm, bounds] = self.get_discrete_colormap()
+        ticks = [-1, 0, 1]
+        boundaries = [-1, 0, 1]
+
+        # Create colorbar
+        cb_ax = divider.append_axes("bottom", size="5%", pad=0.1)
+        cbar = mpl.colorbar.ColorbarBase(cb_ax, cmap=cmap, norm=norm,
+            spacing="proportional", ticks=ticks, boundaries=boundaries, orientation="horizontal"
+        )
+
+        # Customize colorbar labels and ticks
+        cb_ax.tick_params(
+            axis="x",
+            which="major",
+            bottom=False,
+            labelbottom=False
+        )
+        self.set_colormap_legends(cb_ax)
+
+    def get_discrete_colormap(self):
+        cmap = plt.cm.gray
+        cmaplist = [cmap(i) for i in range(cmap.N//2, cmap.N)]
+        custom_cmap = mpl.colors.LinearSegmentedColormap.from_list(
+            "Custom Cmap", cmaplist, len(cmaplist)
+        )
+
+        bounds = np.linspace(0, 1, 3)
+        norm = mpl.colors.BoundaryNorm(bounds, custom_cmap.N)
+        return (custom_cmap, norm, bounds)
+
+    def set_colormap_legends(self, ax):
+        ax.minorticks_on()
+        minor_locator = FixedLocator([-0.5, 0.5])
+        ax.xaxis.set_minor_locator(minor_locator)
+        ax.tick_params(axis="x", which="minor", labelsize=8)
+        ax.set_xticklabels(["Unfertilized", "Fertilized"], minor=True)
+        ax.tick_params(
+            axis="x",
+            which="minor",
+            bottom=False
+        )
 
 # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # from matplotlib.colors import ListedColormap, BoundaryNorm
