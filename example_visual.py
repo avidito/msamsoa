@@ -4,4 +4,9 @@ from msamsoa.visualization.visualizer import Visualizer
 field_gen = parse_field_data("track", "fertilized_field.csv")
 agents_gen = parse_agents_data("track", "agents.csv")
 
-Visualizer.visualize_field(next(field_gen), title="Fertilized Field")
+# Single Visualization
+# Visualizer.visualize_field(next(field_gen), title="Fertilized Field")
+
+# Visualize from Tracks
+viz = Visualizer(track_dir="track")
+viz.visualize_frame(3)

@@ -13,14 +13,38 @@ from matplotlib.ticker import FixedLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
+from .parser import parse_field_data, parse_agents_data
+
 class Visualizer:
     """
     Visualization handler.
 
     Init Params:
-    - cmap: string (default = "gray"); Plotting colormap.
+    - track_dir: string; Directory of track snapshots.
     """
+    ##### Initialization Methods #####
+    def __init__(self, track_dir):
+        self.dir = track_dir
+
     ##### Main Methods #####
+    def visualize_frame(self, frame=0):
+        """
+        Visualize one frame from track snapshots.
+        """
+        fertilized_gen = parse_field_data(self.dir, "fertilized_field.csv")
+        agents_gen = parse_agents_data(self.dir, "agents.csv")
+
+        p = 0
+        while(p <= frame):
+            try:
+                fertilized = next(fertilized_gen)
+                agents =  next(agents_gen)
+                p += 1
+            except StopIteration:
+                break
+        Visualizer.visualize_field(fertilized, title="Fertilization Progress")
+
+
     @staticmethod
     def visualize_field(data, title=None):
         """
