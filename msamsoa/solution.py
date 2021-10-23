@@ -9,15 +9,20 @@ Include:
 """
 
 import numpy as np
+import logging
 
 
 class Solution:
     """
-    Solution Base Class
+    Solution: Solution Base Class
 
     Defining problem space and general information about mission.
+
+    Init Params:
+    - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
     """
     def __init__(self, space):
+        logging.info("Initialize Solution Space")
         self.space = space
         self.boundary = space.shape[0]
         self.size = space.shape[0] ** 2
@@ -26,9 +31,12 @@ class Solution:
 
 class Agent:
     """
-    Solution Base Agent
+    Agent: Solution Base Agent
 
     Defining basic agent for solution's agents blueprint.
+
+    Init Params:
+    - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
     """
 
     def __init__(self, idx, boundary):

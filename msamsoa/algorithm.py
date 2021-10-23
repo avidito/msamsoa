@@ -2,10 +2,14 @@ import numpy as np
 from numpy import random
 
 from msamsoa.solution import Solution, Agent
+from msamsoa.tracker import init_logger, Tracker
+
+import logging
+init_logger()
 
 class MSAMSOA(Solution):
     """
-    Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
+    MSAMSOA: Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
 
     Init Params:
     - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
@@ -21,6 +25,8 @@ class MSAMSOA(Solution):
     ##### Initiation Methods #####
     def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
         super().__init__(space)
+        logging.info("Solution space update: Using MSAMSOA Algorithm")
+
         self.agents_cnt = agents_cnt
         self.params = {
             "a": a,
@@ -31,7 +37,11 @@ class MSAMSOA(Solution):
             "ht": ht
         }
         self.name = "MSAMSOA"
+
+        logging.info("Populate agents with: count=%d; a=%.2f; b=%d", agents_cnt, a, b)
         self.init_agents()
+
+        logging.info("Space initialization and agents distribution is finish successfully")
 
     def __repr__(self):
         return ("SAMSOA Simulation. Agents:{}, a:{a}, b:{b}, d:{d}, dtl0:{dtl0}, dtg0:{dtg0}, ht:{ht}."
@@ -90,28 +100,30 @@ class MSAMSOA(Solution):
         """
         bound = self.boundary
         ht = self.params["ht"]
-        space_field = self.space.copy()
+        fertilized_field = self.space.copy()
         visited_field = np.zeros((bound, bound), bool)
         occupied_field = np.zeros((bound, bound), bool)
+        agents = self.agents.copy()
 
         iteration = 0
         detected_targets = []
         broken_agents = []
-        for agent in self.agents:
+        for agent in agents:
             agent.set_mission("surveillance")
-        # tracker = Tracker(self.size, self.nt)
-        # agent_info = [ (agent.position, agent.mission) for agent in self.agents]
-        # tracker.update(0, vmap, emap, ni, agent_info, simulation)
+
+        tracking = Tracker(field_size=self.size)
+        tracking.add_snapshot(0, fertilized_field, visited_field, agents)
 
         while(
-            (sum(sum(space_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
-            and iteration < max_iteration                           # or iteration lower than max_iteration
+            (sum(sum(fertilized_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
+            and iteration < max_iteration                                # or iteration lower than max_iteration
         ):
             iteration += 1
+            logging.info(f"Starting iteration {iteration:4}")
 
             # Grouping agent by mission
-            surveillance_agents = [agent for agent in self.agents if (agent.mission == "surveillance")]
-            fertilization_agents = [agent for agent in self.agents if (agent.mission == "fertilization")]
+            surveillance_agents = [agent for agent in agents if (agent.mission == "surveillance")]
+            fertilization_agents = [agent for agent in agents if (agent.mission == "fertilization")]
 
             # Fertilization
             for agent in fertilization_agents:
@@ -120,15 +132,18 @@ class MSAMSOA(Solution):
 
             # Surveillance mission
             for agent in surveillance_agents:
-                origin, destination = agent.move()
+                # origin, destination = agent.move()
                 # occupied_field[origin] = False
                 # occupied_field[destination] = True
 
                 agent.surveillance()
 
             # Reduce agents power
-            for agent in self.agents:
+            for agent in agents:
                 agent.reduce_power(1)
+
+            # Take progress snapshot
+            tracking.add_snapshot(iteration, fertilized_field, visited_field, agents)
 
                 #     search_agents = []
                 #     for agent in self.agents:
