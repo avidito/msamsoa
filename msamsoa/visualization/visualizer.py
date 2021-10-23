@@ -21,7 +21,8 @@ class Visualizer:
     - cmap: string (default = "gray"); Plotting colormap.
     """
     ##### Main Methods #####
-    def visualize_field(self, data, title=None):
+    @staticmethod
+    def visualize_field(data, title=None):
         """
         Visualize individual space.
 
@@ -36,16 +37,17 @@ class Visualizer:
         viz.axes.yaxis.set_visible(False)
         divider = make_axes_locatable(viz.axes)
 
-        self.visualize_colorbar(divider)
+        Visualizer.visualize_colorbar(divider)
         plt.show()
 
     ##### Visualizer Utils #####
-    def visualize_colorbar(self, divider):
+    @staticmethod
+    def visualize_colorbar(divider):
         """
         Visualize colorbar to give information about fertilized/unfertilized zone.
         """
         # Get dicrete colormap
-        [cmap, norm, bounds] = self.get_discrete_colormap()
+        [cmap, norm, bounds] = Visualizer.get_discrete_colormap()
         ticks = [-1, 0, 1]
         boundaries = [-1, 0, 1]
 
@@ -62,9 +64,10 @@ class Visualizer:
             bottom=False,
             labelbottom=False
         )
-        self.set_colormap_legends(cb_ax)
+        Visualizer.visualize_colorbar_legends(cb_ax)
 
-    def get_discrete_colormap(self):
+    @staticmethod
+    def get_discrete_colormap():
         cmap = plt.cm.gray
         cmaplist = [cmap(i) for i in range(cmap.N//2, cmap.N)]
         custom_cmap = mpl.colors.LinearSegmentedColormap.from_list(
@@ -75,7 +78,8 @@ class Visualizer:
         norm = mpl.colors.BoundaryNorm(bounds, custom_cmap.N)
         return (custom_cmap, norm, bounds)
 
-    def set_colormap_legends(self, ax):
+    @staticmethod
+    def visualize_colorbar_legends(ax):
         ax.minorticks_on()
         minor_locator = FixedLocator([-0.5, 0.5])
         ax.xaxis.set_minor_locator(minor_locator)
