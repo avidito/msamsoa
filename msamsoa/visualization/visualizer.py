@@ -21,8 +21,12 @@ class Visualizer:
         self.cmap = cmap
 
     ##### Main Methods #####
-    def visualize_field(self, data):
-        plt.imshow(data, interpolation="none", cmap=self.cmap, vmin=-1, vmax=1)
+    def visualize_field(self, data, title=None):
+        viz = plt.imshow(data, interpolation="none", cmap=self.cmap, vmin=-1, vmax=1)
+        if (title):
+            viz.axes.set_title(title)
+        viz.axes.xaxis.set_visible(False)
+        viz.axes.yaxis.set_visible(False)
         plt.show()
 
 # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
