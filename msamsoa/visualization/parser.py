@@ -25,8 +25,10 @@ def parse_field_data(dir, filename):
         file = open(filepath, "r", encoding="utf-8")
         reader = csv.reader(file)
         header = next(reader)
+        size = int(np.sqrt(len(header)))
         for row in reader:
-            matrix_data = np.reshape(row, (size, size))
+            row_int = np.vectorize(int)(row)
+            matrix_data = np.reshape(row_int, (size, size))
             yield matrix_data
     finally:
         file.close()
@@ -54,7 +56,6 @@ def parse_agents_data(dir, filename):
 
             elif (batch_data):
                 iteration_pivot = iteration
-                print(batch_data)
                 yield batch_data
 
                 batch_data.clear()
