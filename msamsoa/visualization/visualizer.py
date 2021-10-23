@@ -13,39 +13,58 @@ from matplotlib.ticker import FixedLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
+from .parser import parse_field_data, parse_agents_data
+
 class Visualizer:
     """
     Visualization handler.
 
     Init Params:
-    - cmap: string (default = "gray"); Plotting colormap.
+    - track_dir: string; Directory of track snapshots.
     """
-    ##### Main Methods #####
-    def visualize_field(self, data, title=None):
-        """
-        Visualize individual space.
+    ##### Initialization Methods #####
+    def __init__(self, track_dir):
+        self.dir = track_dir
 
-        Params:
-        - data: numpy.array; Space data to be visualized.
-        - title: string (default=None); Set title of visualization.
+    ##### Main Methods #####
+    def visualize_frame(self, frame=0):
         """
+        Visualize one frame from track snapshots.
+        """
+        fertilized_gen = parse_field_data(self.dir, "fertilized_field.csv")
+        agents_gen = parse_agents_data(self.dir, "agents.csv")
+
+        p = 0
+        while(p <= frame):
+            try:
+                fertilized = next(fertilized_gen)
+                agents =  next(agents_gen)
+                p += 1
+            except StopIteration:
+                break
+        completion_rate = {"surveillance": 0.08, "fertilization": 0.05} # Placeholder
+        agent_cnt = 10 # Placholder
+        Visualizer.visualize_field(fertilized, completion_rate, agent_cnt, iteration=p-1)
+
+    @staticmethod
+    def visualize_field(data, completion_rate, agent_cnt, iteration=0):
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
-        if (title):
-            viz.axes.set_title(title)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
-        divider = make_axes_locatable(viz.axes)
 
-        self.visualize_colorbar(divider)
+        divider = make_axes_locatable(viz.axes)
+        Visualizer.visualize_colorbar(divider)
+        Visualizer.visualize_progress_rate(viz.axes, completion_rate, agent_cnt, iteration)
         plt.show()
 
     ##### Visualizer Utils #####
-    def visualize_colorbar(self, divider):
+    @staticmethod
+    def visualize_colorbar(divider):
         """
         Visualize colorbar to give information about fertilized/unfertilized zone.
         """
         # Get dicrete colormap
-        [cmap, norm, bounds] = self.get_discrete_colormap()
+        [cmap, norm, bounds] = Visualizer.get_discrete_colormap()
         ticks = [-1, 0, 1]
         boundaries = [-1, 0, 1]
 
@@ -62,9 +81,10 @@ class Visualizer:
             bottom=False,
             labelbottom=False
         )
-        self.set_colormap_legends(cb_ax)
+        Visualizer.visualize_colorbar_legends(cb_ax)
 
-    def get_discrete_colormap(self):
+    @staticmethod
+    def get_discrete_colormap():
         cmap = plt.cm.gray
         cmaplist = [cmap(i) for i in range(cmap.N//2, cmap.N)]
         custom_cmap = mpl.colors.LinearSegmentedColormap.from_list(
@@ -75,7 +95,8 @@ class Visualizer:
         norm = mpl.colors.BoundaryNorm(bounds, custom_cmap.N)
         return (custom_cmap, norm, bounds)
 
-    def set_colormap_legends(self, ax):
+    @staticmethod
+    def visualize_colorbar_legends(ax):
         ax.minorticks_on()
         minor_locator = FixedLocator([-0.5, 0.5])
         ax.xaxis.set_minor_locator(minor_locator)
@@ -86,6 +107,16 @@ class Visualizer:
             which="minor",
             bottom=False
         )
+
+    @staticmethod
+    def visualize_progress_rate(ax, completion_rate, agents_cnt, iteration):
+        s_rate = completion_rate.get("surveillance", 0) * 100
+        f_rate = completion_rate.get("fertilization", 0) * 100
+        title = (
+            f"Iteration   : {iteration:4} {' ' * 21}Active UAV : {agents_cnt:3}\n"
+            f"Surveillance: {s_rate:6.2f}%{' ' * 12}Fertilization: {f_rate:6.2f}%"
+        )
+        ax.set_title(title, {"fontsize": 10}, loc="left")
 
 # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # from matplotlib.colors import ListedColormap, BoundaryNorm
