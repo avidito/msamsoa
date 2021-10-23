@@ -100,29 +100,30 @@ class MSAMSOA(Solution):
         """
         bound = self.boundary
         ht = self.params["ht"]
-        space_field = self.space.copy()
+        fertilized_field = self.space.copy()
         visited_field = np.zeros((bound, bound), bool)
         occupied_field = np.zeros((bound, bound), bool)
+        agents = self.agents.copy()
 
         iteration = 0
         detected_targets = []
         broken_agents = []
-        for agent in self.agents:
+        for agent in agents:
             agent.set_mission("surveillance")
 
-        tracking = Tracker()
-        # agent_info = [ (agent.position, agent.mission) for agent in self.agents]
-        # tracker.update(0, vmap, emap, ni, agent_info, simulation)
+        tracking = Tracker(field_size=self.size)
+        tracking.add_snapshot(0, fertilized_field, visited_field, agents)
 
         while(
-            (sum(sum(space_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
-            and iteration < max_iteration                           # or iteration lower than max_iteration
+            (sum(sum(fertilized_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
+            and iteration < max_iteration                                # or iteration lower than max_iteration
         ):
             iteration += 1
+            logging.info(f"Starting iteration {iteration:4}")
 
             # Grouping agent by mission
-            surveillance_agents = [agent for agent in self.agents if (agent.mission == "surveillance")]
-            fertilization_agents = [agent for agent in self.agents if (agent.mission == "fertilization")]
+            surveillance_agents = [agent for agent in agents if (agent.mission == "surveillance")]
+            fertilization_agents = [agent for agent in agents if (agent.mission == "fertilization")]
 
             # Fertilization
             for agent in fertilization_agents:
@@ -138,8 +139,11 @@ class MSAMSOA(Solution):
                 agent.surveillance()
 
             # Reduce agents power
-            for agent in self.agents:
+            for agent in agents:
                 agent.reduce_power(1)
+
+            # Take progress snapshot
+            tracking.add_snapshot(iteration, fertilized_field, visited_field, agents)
 
                 #     search_agents = []
                 #     for agent in self.agents:
