@@ -11,6 +11,7 @@ import argparse
 import logging
 import os
 import csv
+import numpy as np
 
 levels = {
     "debug": logging.DEBUG,
@@ -52,22 +53,22 @@ class Tracker:
 
     Init Params:
     - field_size: int; Total grid in space field.
+    - target_cnt: int; Total grid that need to be fertilized.
     - track_dir: string (default = "track"); Path for track result directory. Automatically create directory if not exists.
     """
     ##### Initialization Methods #####
-    def __init__(self, field_size, track_dir="track"):
+    def __init__(self, field_size, target_cnt, track_dir="track"):
         logging.debug("Initialize Tracker with: field_size=%d; track_dir='%s'", field_size, track_dir)
         if (not os.path.exists(track_dir)):
             logging.debug("Creating result directory at: '%s'", track_dir)
             os.makedirs(track_dir)
 
         self.dir = track_dir
+        self.field_size = field_size
+        self.target_cnt = target_cnt
         self.init_track_files(field_size)
 
     def init_track_files(self, field_size):
-        """
-        Initialize result file for each type of track information. All result will be saved as CSV. Field information will be saved as flatten matrix.
-        """
         field_files = ["fertilized_field", "visited_field"]
         for filename in field_files:
             filepath = os.path.join(self.dir, f"{filename}.csv")
@@ -80,32 +81,29 @@ class Tracker:
             writer = csv.writer(file)
             writer.writerow(["iteration", "agent_id", "x", "y", "mission"])
 
+        filepath = os.path.join(self.dir, "summary.csv")
+        with open(filepath, "w+", encoding="utf-8", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["iteration", "active_agents", "agent_surveillance", "agent_fertilization", "surveillance_grid", "surveillance_rate", "fertilization_grid", "fertilization_rate"])
+
     ##### Tracking Methods #####
-    def add_snapshot(self, iteration, fertilized_field, visited_field, agents):
-        """
-        Add snapshot of algorithm progress
-        """
+    def add_snapshot(self, iteration, visited_field, fertilized_field, agents):
         logging.debug(f"Add logging for iteration {iteration:4}")
 
-        self.add_field_snapshot("fertilized_field", fertilized_field)
         self.add_field_snapshot("visited_field", visited_field)
+        self.add_field_snapshot("fertilized_field", fertilized_field)
         self.add_agents_snapshot("agents", iteration, agents)
+        self.add_summary_snapshot("summary", iteration, agents, visited_field, fertilized_field)
 
     def add_field_snapshot(self, filename, field):
-        """
-        Add snapshot of field data.
-        """
         logging.debug(f"Flatten '{filename}' data and save to '{filename}.csv'")
-        flatten_field = field.flatten()
+        flatten_field = np.vectorize(int)(field.flatten())
         filepath = os.path.join(self.dir, f"{filename}.csv")
         with open(filepath, "a", encoding="utf-8", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(flatten_field)
 
     def add_agents_snapshot(self, filename, iteration, agents):
-        """
-        Add snapshot of agents data.
-        """
         logging.debug(f"Parse agents information and save to '{filename}.csv'")
         agents_data = [
             {
@@ -122,6 +120,26 @@ class Tracker:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             for data in agents_data:
                 writer.writerow(data)
+
+    def add_summary_snapshot(self, filename, iteration, agents, visited_field, fertilized_field):
+        logging.debug(f"Build summary information and save to '{filename}.csv'")
+        surveillance_grid = np.sum(visited_field)
+        fertilization_grid = self.target_cnt - (self.field_size - np.sum(fertilized_field))
+        summary_data = {
+            "iteration": iteration,
+            "active_agents": sum([1 for agent in agents if (agent.mission)]),
+            "agent_surveillance": sum([1 for agent in agents if (agent.mission == "surveillance")]),
+            "agent_fertilization": sum([1 for agent in agents if (agent.mission == "fertilization")]),
+            "surveillance_grid": surveillance_grid,
+            "surveillance_rate": surveillance_grid / self.field_size,
+            "fertilization_grid": fertilization_grid,
+            "fertilization_rate": fertilization_grid / self.field_size
+        }
+        filepath = os.path.join(self.dir, f"{filename}.csv")
+        with open(filepath, "a", encoding="utf-8", newline="") as file:
+            fieldnames = ["iteration", "active_agents", "agent_surveillance", "agent_fertilization", "surveillance_grid", "surveillance_rate", "fertilization_grid", "fertilization_rate"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writerow(summary_data)
 
 #
 #     # Inisiasi Kelas
