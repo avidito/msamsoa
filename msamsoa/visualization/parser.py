@@ -51,16 +51,16 @@ def parse_agents_data(dir, filename):
         iteration_pivot = 0
         batch_data = []
         for row in reader:
-            iteration = int(row[0])
-            if (iteration == iteration_pivot):
-                batch_data.append(row)
+            cvt_row = [int(val) for val in row[:-1]] + row[-1:]
+            if (cvt_row[0] == iteration_pivot):
+                batch_data.append(cvt_row)
 
             elif (batch_data):
-                iteration_pivot = iteration
+                iteration_pivot = cvt_row[0]
                 yield batch_data
 
                 batch_data.clear()
-                batch_data.append(row)
+                batch_data.append(cvt_row)
     finally:
         file.close()
 

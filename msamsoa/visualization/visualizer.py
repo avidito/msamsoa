@@ -49,10 +49,11 @@ class Visualizer:
             "fertilization": summary.get("fertilization_rate", 0)
         }
         agents_cnt = summary.get("active_agents", 0)
-        Visualizer.visualize_field(fertilized, completion_rate, agents_cnt, iteration=p-1)
+        Visualizer.visualize_field(fertilized, agents, completion_rate, agents_cnt, iteration=p-1)
 
+    ##### Visualization Utils #####
     @staticmethod
-    def visualize_field(data, completion_rate, agents_cnt, iteration=0):
+    def visualize_field(data, agents, completion_rate, agents_cnt, iteration=0):
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
@@ -60,6 +61,7 @@ class Visualizer:
         divider = make_axes_locatable(viz.axes)
         Visualizer.visualize_colorbar(divider)
         Visualizer.visualize_progress_rate(viz.axes, completion_rate, agents_cnt, iteration)
+        Visualizer.visualize_agents(viz.axes, agents)
         plt.show()
 
     ##### Visualizer Utils #####
@@ -122,6 +124,11 @@ class Visualizer:
             f"Surveillance: {s_rate:6.2f}%{' ' * 12}Fertilization: {f_rate:6.2f}%"
         )
         ax.set_title(title, {"fontsize": 10}, loc="left")
+
+    @staticmethod
+    def visualize_agents(ax, agents):
+        agent_locations = [(agent[2], agent[3]) for agent in agents]
+        active_agents = ax.scatter(*list(zip(*agent_locations)), color="blue")
 
 # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # from matplotlib.colors import ListedColormap, BoundaryNorm
