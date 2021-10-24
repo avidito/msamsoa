@@ -25,8 +25,8 @@ class MSAMSOA(Solution):
     Init Params:
     - space: numpy.array; Problem space in matrix form, consist of value 0 (for fertilized space) and 1 (for unfertilized space)
     - agent_cnt: int; Total number of agents (UAV) for implementation.
-    - a: float (default = 0.7);
-    - b: float (default = 0.3);
+    - a: float (default = 0.7); Pheromone value importance in navigation decision.
+    - b: float (default = 0.3); Heuristic value importance in navigation decision.
     - d: int (default = 80);
     - diff_local_pheromone: float (default = 1.0); Base pheromone for local reduction.
     - diff_global_pheromone: float (default = 1.0); Base pheromone for global addition.
@@ -34,7 +34,7 @@ class MSAMSOA(Solution):
     """
 
     ##### Initiation Methods #####
-    def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, diff_local_pheromone=0.1, diff_global_pheromone=1.0, ht=10):
+    def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, diff_local_pheromone=1.0, diff_global_pheromone=1.0, ht=10):
         super().__init__(space)
         logging.info("Solution space update: Using MSAMSOA Algorithm")
 
@@ -261,10 +261,10 @@ class MSAMSOA_Agent(Agent):
     Init Params:
     - idx: int; Unique identifier for each agents.
     - boundary: int; Boundary location (x or y axis) of space field.
-    - a: float;
-    - b: float;
-    - diff_local_pheromone: float (default = 1.0); Base pheromone for local reduction.
-    - diff_global_pheromone: float (default = 1.0); Base pheromone for global addition.
+    - a: float; Pheromone value importance in navigation decision.
+    - b: float; Heuristic value importance in navigation decision.
+    - diff_local_pheromone: float; Base pheromone for local reduction.
+    - diff_global_pheromone: float; Base pheromone for global addition.
     """
     def __init__(self, idx, boundary, a, b, diff_local_pheromone, diff_global_pheromone):
         super().__init__(idx, boundary)
@@ -277,7 +277,7 @@ class MSAMSOA_Agent(Agent):
         self.mission = "surveillance"
         self.power = 100
 
-        self.move_direction = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
+        self.move_direction = [(0,2), (2,0), (0,-2), (0,2), (0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1)]
         self.local_pheromone = np.full((boundary, boundary), 10, dtype=float)
         self.convening_pheromone = np.zeros((boundary, boundary), dtype=float)
         self.hungry_point = 0
@@ -306,8 +306,15 @@ class MSAMSOA_Agent(Agent):
         return origin, destination
 
     def get_fitness_score(self, grids):
-        fitness = [random.randint(100) for grid in grids]
-        return fitness
+        a = self.params.get("a", 0.7)
+        b = self.params.get("b", 0.3)
+
+        grid_fitness = []
+        for grid in grids:
+            x_pos, y_pos = grid
+            fitness = a * self.local_pheromone[x_pos, y_pos]
+            grid_fitness.append(fitness)
+        return grid_fitness
 
     ##### Pheromone Management #####
     def update_local_pheromone(self, surveillance_agents):
