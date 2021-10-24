@@ -133,9 +133,13 @@ class MSAMSOA(Solution):
 
             # Surveillance mission
             for agent in surveillance_agents:
-                # origin, destination = agent.move()
-                # occupied_field[origin] = False
-                # occupied_field[destination] = True
+                origin, destination = agent.move(occupied_field)
+                if(
+                    (origin[0] >= 0 and origin[0] < self.boundary) and
+                    (origin[1] >= 0 and origin[1] < self.boundary)
+                ):
+                    occupied_field[origin] = False
+                occupied_field[destination] = True
 
                 agent.surveillance()
 
@@ -244,6 +248,7 @@ class MSAMSOA_Agent(Agent):
             "b": b
         }
         self.mission = None
+        self.move_direction = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
         self.hungry_point = 0
         self.hungry_state = False
         self.power = 100
@@ -259,8 +264,20 @@ class MSAMSOA_Agent(Agent):
                 self.mission = None # Broken/Dead
 
     ##### Navigation #####
-    def move(self):
-        pass
+    def move(self, occupied_field):
+        available_grid = self.get_available_grid(occupied_field)
+        grid_fitness = self.get_fitness_score(available_grid)
+        grid_choices = list(zip(available_grid, grid_fitness))
+        best_grid = max(grid_choices, key=lambda x: x[1])
+
+        origin = self.position
+        self.position = best_grid[0]
+        destination = self.position
+        return origin, destination
+
+    def get_fitness_score(self, grids):
+        fitness = [random.randint(100) for grid in grids]
+        return fitness
 
     ##### Surveillance #####
     def surveillance(self):
