@@ -128,7 +128,7 @@ class MSAMSOA(Solution):
 
             # Fertilization
             for agent in fertilization_agents:
-                MSAMSOA.fertilize(agent, fertilized_field)
+                MSAMSOA.fertilization(agent, fertilized_field)
                 agent.set_mission("surveillance")
 
             # Surveillance
@@ -142,6 +142,8 @@ class MSAMSOA(Solution):
                 occupied_field[destination] = True
 
                 visited_field = MSAMSOA.surveillance(agent, visited_field)
+                if (fertilized_field[agent.position] == False):
+                    agent.set_mission("fertilization")
 
             # Reduce agents power
             for agent in agents:

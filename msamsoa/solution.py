@@ -33,9 +33,10 @@ class Solution:
 
     ##### Mission Methods #####
     @staticmethod
-    def surveillance(agents, visited_field):
-        [x_pos, y_pos] = agents.position
-        radar_range = agents.radar_range
+    def surveillance(agent, visited_field):
+        logging.debug(f"Agent {agent.id:3} executing surveillance mission at {agent.position}")
+        [x_pos, y_pos] = agent.position
+        radar_range = agent.radar_range
         for dy in range(-radar_range, radar_range):
             for dx in range(-radar_range, radar_range):
                 x_read = x_pos + dx
@@ -45,8 +46,11 @@ class Solution:
         return visited_field
 
     @staticmethod
-    def fertilization(agents, fertilized_field):
-        pass
+    def fertilization(agent, fertilized_field):
+        logging.debug(f"Agent {agent.id:3} executing fertilization mission at {agent.position}")
+        fertilized_field[agent.position] = True
+        return fertilized_field
+
 
 class Agent:
     """
