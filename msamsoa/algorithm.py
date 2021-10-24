@@ -30,7 +30,7 @@ class MSAMSOA(Solution):
     - d: int (default = 80);
     - diff_local_pheromone: float (default = 1.0); Base pheromone for local reduction.
     - diff_global_pheromone: float (default = 1.0); Base pheromone for global addition.
-    - ht: int (default = 10);
+    - ht: int (default = 10); Maximum iteration of no new grid surveillance before agent enter hungry state.
     """
 
     ##### Initiation Methods #####
@@ -43,17 +43,17 @@ class MSAMSOA(Solution):
             "a": a,
             "b": b,
             "diff_local_pheromone": diff_local_pheromone,
-            "diff_global_pheromone": diff_global_pheromone
+            "diff_global_pheromone": diff_global_pheromone,
+            "ht": ht
         }
         self.params = {
             "d": d,
-            "ht": ht,
             **agents_params
         }
         self.name = "MSAMSOA"
 
         logging.info("Populate agents with: count=%d; a=%.2f; b=%d", agents_cnt, a, b)
-        self.init_agents(**agents_params)
+        self.init_agents(agents_params)
 
         logging.info("Space initialization and agents distribution is finish successfully")
 
@@ -61,9 +61,9 @@ class MSAMSOA(Solution):
         return ("SAMSOA Simulation. Agents:{}, a:{a}, b:{b}, d:{d}, dtl0:{dtl0}, dtg0:{dtg0}, ht:{ht}."
                 ).format(self.agents_cnt, *(self.params))
 
-    def init_agents(self, a, b, diff_local_pheromone, diff_global_pheromone):
+    def init_agents(self, agent_params):
         self.agents = [
-            MSAMSOA_Agent(i, self.boundary, a, b, diff_local_pheromone, diff_global_pheromone)
+            MSAMSOA_Agent(i, self.boundary, **agent_params)
             for i in range(1, self.agents_cnt+1)
         ]
         self.random_pos_agents()
@@ -113,7 +113,6 @@ class MSAMSOA(Solution):
         - log_path: str (default = "track_path"); Path to log file.
         """
         bound = self.boundary
-        ht = self.params["ht"]
         visited_field = np.zeros((bound, bound), bool)
         occupied_field = np.zeros((bound, bound), bool)
         fertilized_field = self.space.copy()
@@ -163,6 +162,8 @@ class MSAMSOA(Solution):
                 x_pos, y_pos = agent.position
                 if (fertilized_field[x_pos, y_pos] == False):
                     agent.set_mission("fertilization")
+                else:
+                    agent.check_hungry_state()
 
             for agent in surveillance_agents:
                 agent.update_local_pheromone(surveillance_agents)
@@ -173,6 +174,21 @@ class MSAMSOA(Solution):
 
             # Take progress snapshot
             tracking.add_snapshot(iteration, visited_field, fertilized_field, agents)
+
+    ##### Mission Methods #####
+    @staticmethod
+    def fertilization(agent, fertilized_field, detected_targets):
+        fertilized_field, detected_targets = Solution.fertilization(agent, fertilized_field, detected_targets)
+        if (agent.hungry_state):
+            agent.set_hungry_state(False)
+        return fertilized_field, detected_targets
+
+    @staticmethod
+    def surveillance(agent, visited_field, fertilized_field, detected_targets):
+        visited_field, detected_targets, new_grid_cnt = Solution.surveillance(agent, visited_field, fertilized_field, detected_targets)
+        if (agent.hungry_state == False):
+            agent.no_new_grid_streak += 1
+        return visited_field, detected_targets
 
                 #     search_agents = []
                 #     for agent in self.agents:
@@ -266,14 +282,16 @@ class MSAMSOA_Agent(Agent):
     - b: float; Heuristic value importance in navigation decision.
     - diff_local_pheromone: float; Base pheromone for local reduction.
     - diff_global_pheromone: float; Base pheromone for global addition.
+    - ht: int; Maximum iteration of no new grid surveillance before agent enter hungry state.
     """
-    def __init__(self, idx, boundary, a, b, diff_local_pheromone, diff_global_pheromone):
+    def __init__(self, idx, boundary, a, b, diff_local_pheromone, diff_global_pheromone, ht):
         super().__init__(idx, boundary)
         self.params = {
             "a": a,
             "b": b,
             "diff_local_pheromone": diff_local_pheromone,
-            "diff_global_pheromone": diff_global_pheromone
+            "diff_global_pheromone": diff_global_pheromone,
+            "ht": ht
         }
         self.mission = "surveillance"
         self.power = 100
@@ -283,6 +301,7 @@ class MSAMSOA_Agent(Agent):
         self.convening_pheromone = np.zeros((boundary, boundary), dtype=float)
         self.hungry_point = 0
         self.hungry_state = False
+        self.no_new_grid_streak = 0
 
     ##### State #####
     def set_mission(self, mission):
@@ -346,6 +365,16 @@ class MSAMSOA_Agent(Agent):
 
                     self.local_pheromone[x_grid, y_grid] -= pheromone_reduction
                     self.local_pheromone[x_grid, y_grid] += pheromone_addition
+
+    ##### Agent State Management #####
+    def set_hungry_state(self, state):
+        self.hungry_state = state
+
+    def check_hungry_state(self):
+        ht = self.params.get("ht", 10)
+        if (self.no_new_grid_streak >= ht):
+            self.set_hungry_state(True)
+
 
     #         nw, nl = self.boundary
     #         R = 2

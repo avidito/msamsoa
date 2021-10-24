@@ -46,15 +46,17 @@ class Solution:
         [x_pos, y_pos] = agent.position
         radar_range = agent.radar_range
 
+        new_grid_cnt = 0
         for dy in range(-radar_range, radar_range):
             for dx in range(-radar_range, radar_range):
                 x_read = x_pos + dx
                 y_read = y_pos + dy
                 if (Solution.check_boundary(x_read, y_read, len(visited_field))):
                     visited_field[x_read, y_read] = True
+                    new_grid_cnt += 1
                     if (fertilized_field[x_read, y_read] == False):
                         detected_targets.add((x_read, y_read))
-        return visited_field, detected_targets
+        return visited_field, detected_targets, new_grid_cnt
 
     ##### Utilities Methods #####
     @staticmethod
