@@ -13,7 +13,7 @@ from matplotlib.ticker import FixedLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from .parser import parse_field_data, parse_agents_data
+from .parser import parse_field_data, parse_agents_data, parse_summary_data
 
 class Visualizer:
     """
@@ -33,28 +33,33 @@ class Visualizer:
         """
         fertilized_gen = parse_field_data(self.dir, "fertilized_field.csv")
         agents_gen = parse_agents_data(self.dir, "agents.csv")
+        summary_gen = parse_summary_data(self.dir, "summary.csv")
 
         p = 0
         while(p <= frame):
             try:
                 fertilized = next(fertilized_gen)
                 agents =  next(agents_gen)
+                summary = next(summary_gen)
                 p += 1
             except StopIteration:
                 break
-        completion_rate = {"surveillance": 0.08, "fertilization": 0.05} # Placeholder
-        agent_cnt = 10 # Placholder
-        Visualizer.visualize_field(fertilized, completion_rate, agent_cnt, iteration=p-1)
+        completion_rate = {
+            "surveillance": summary.get("surveillance_rate", 0),
+            "fertilization": summary.get("fertilization_rate", 0)
+        }
+        agents_cnt = summary.get("active_agents", 0)
+        Visualizer.visualize_field(fertilized, completion_rate, agents_cnt, iteration=p-1)
 
     @staticmethod
-    def visualize_field(data, completion_rate, agent_cnt, iteration=0):
+    def visualize_field(data, completion_rate, agents_cnt, iteration=0):
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
 
         divider = make_axes_locatable(viz.axes)
         Visualizer.visualize_colorbar(divider)
-        Visualizer.visualize_progress_rate(viz.axes, completion_rate, agent_cnt, iteration)
+        Visualizer.visualize_progress_rate(viz.axes, completion_rate, agents_cnt, iteration)
         plt.show()
 
     ##### Visualizer Utils #####
@@ -113,7 +118,7 @@ class Visualizer:
         s_rate = completion_rate.get("surveillance", 0) * 100
         f_rate = completion_rate.get("fertilization", 0) * 100
         title = (
-            f"Iteration   : {iteration:4} {' ' * 21}Active UAV : {agents_cnt:3}\n"
+            f"Iteration{' ' * 6}: {iteration:4} {' ' * 18}Active UAV : {agents_cnt:3}\n"
             f"Surveillance: {s_rate:6.2f}%{' ' * 12}Fertilization: {f_rate:6.2f}%"
         )
         ax.set_title(title, {"fontsize": 10}, loc="left")
