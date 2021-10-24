@@ -79,7 +79,7 @@ class MSAMSOA(Solution):
 
                 # Calculate minimum distance to other agents
                 dist = min(list(
-                    map(lambda p: np.linalg.norm(position - p), assigned_positions)
+                    map(lambda p: np.linalg.norm(np.array(position) - np.array(p)), assigned_positions)
                 )) if (assigned_positions) else np.inf
 
             agent.position = position
@@ -90,7 +90,7 @@ class MSAMSOA(Solution):
     def get_position(boundary):
         side = -1 if (random.randint(2)) else boundary # Bot/Left or Top/Right side
         loc = random.randint(boundary) # Location between Boundary
-        position = np.array([side, loc]) if (random.randint(2)) else np.array([loc, side])
+        position = [side, loc] if (random.randint(2)) else [loc, side]
         return position
 
     @staticmethod
@@ -120,7 +120,7 @@ class MSAMSOA(Solution):
         agents = self.agents.copy()
 
         iteration = 0
-        detected_targets = []
+        detected_targets = set()
         broken_agents = []
 
         target_cnt = self.size - np.sum(fertilized_field)
@@ -146,21 +146,22 @@ class MSAMSOA(Solution):
 
             # Fertilization
             for agent in fertilization_agents:
-                MSAMSOA.fertilization(agent, fertilized_field)
+                fertilized_field, detected_targets = MSAMSOA.fertilization(agent, fertilized_field, detected_targets)
                 agent.set_mission("surveillance")
 
             # Surveillance
             for agent in surveillance_agents:
-                origin, destination = agent.move(occupied_field)
+                origin, destination, occupied_field = agent.move(occupied_field)
                 if(
                     (origin[0] >= 0 and origin[0] < self.boundary) and
                     (origin[1] >= 0 and origin[1] < self.boundary)
                 ):
-                    occupied_field[origin] = False
-                occupied_field[destination] = True
+                    occupied_field[origin[0], origin[1]] = False
+                occupied_field[destination[0], destination[1]] = True
 
-                visited_field = MSAMSOA.surveillance(agent, visited_field)
-                if (fertilized_field[agent.position] == False):
+                visited_field, detected_targets = MSAMSOA.surveillance(agent, visited_field, fertilized_field, detected_targets)
+                x_pos, y_pos = agent.position
+                if (fertilized_field[x_pos, y_pos] == False):
                     agent.set_mission("fertilization")
 
             for agent in surveillance_agents:
@@ -303,7 +304,7 @@ class MSAMSOA_Agent(Agent):
         origin = self.position
         self.position = best_grid[0]
         destination = self.position
-        return origin, destination
+        return origin, destination, occupied_field
 
     def get_fitness_score(self, grids):
         a = self.params.get("a", 0.7)

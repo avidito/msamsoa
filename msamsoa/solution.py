@@ -32,23 +32,29 @@ class Solution:
 
     ##### Mission Methods #####
     @staticmethod
-    def surveillance(agent, visited_field):
+    def fertilization(agent, fertilized_field, detected_targets):
+        logging.debug(f"Agent {agent.id:3} executing fertilization mission at {agent.position}")
+
+        x_pos, y_pos = agent.position
+        fertilized_field[x_pos, y_pos] = True
+        detected_targets.remove((x_pos, y_pos))
+        return fertilized_field, detected_targets
+
+    @staticmethod
+    def surveillance(agent, visited_field, fertilized_field, detected_targets):
         logging.debug(f"Agent {agent.id:3} executing surveillance mission at {agent.position}")
         [x_pos, y_pos] = agent.position
         radar_range = agent.radar_range
+
         for dy in range(-radar_range, radar_range):
             for dx in range(-radar_range, radar_range):
                 x_read = x_pos + dx
                 y_read = y_pos + dy
                 if (Solution.check_boundary(x_read, y_read, len(visited_field))):
-                    visited_field[y_read, x_read] = True
-        return visited_field
-
-    @staticmethod
-    def fertilization(agent, fertilized_field):
-        logging.debug(f"Agent {agent.id:3} executing fertilization mission at {agent.position}")
-        fertilized_field[agent.position] = True
-        return fertilized_field
+                    visited_field[x_read, y_read] = True
+                    if (fertilized_field[x_read, y_read] == False):
+                        detected_targets.add((x_read, y_read))
+        return visited_field, detected_targets
 
     ##### Utilities Methods #####
     @staticmethod
@@ -80,9 +86,6 @@ class Agent:
         self.radar_range = 2
 
     ##### Navigation #####
-    def move(self):
-        pass
-
     def get_available_grid(self, occupied_field):
         available_grid = []
         for choice in self.move_direction:
@@ -90,7 +93,7 @@ class Agent:
             candidate_x = self.position[0] + choice[0]
             if (
                 (Solution.check_boundary(candidate_x, candidate_y, self.boundary)) and
-                (occupied_field[candidate_y, candidate_x] == False)
+                (occupied_field[candidate_x, candidate_y] == False)
             ):
                 available_grid.append((candidate_x, candidate_y))
         return available_grid
