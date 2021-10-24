@@ -17,5 +17,4 @@ Visualizer.visualize_field(
 
 # Visualize from Tracks
 viz = Visualizer(track_dir="track")
-viz.visualize_frame(1)
 viz.visualize_frame(50)

@@ -128,10 +128,10 @@ class MSAMSOA(Solution):
 
             # Fertilization
             for agent in fertilization_agents:
-                agent.fertilize()
+                MSAMSOA.fertilize(agent, fertilized_field)
                 agent.set_mission("surveillance")
 
-            # Surveillance mission
+            # Surveillance
             for agent in surveillance_agents:
                 origin, destination = agent.move(occupied_field)
                 if(
@@ -141,7 +141,7 @@ class MSAMSOA(Solution):
                     occupied_field[origin] = False
                 occupied_field[destination] = True
 
-                agent.surveillance()
+                visited_field = MSAMSOA.surveillance(agent, visited_field)
 
             # Reduce agents power
             for agent in agents:
@@ -278,14 +278,6 @@ class MSAMSOA_Agent(Agent):
     def get_fitness_score(self, grids):
         fitness = [random.randint(100) for grid in grids]
         return fitness
-
-    ##### Surveillance #####
-    def surveillance(self):
-        pass
-
-    ##### Fertilization #####
-    def fertilize(self):
-        pass
 
 # import numpy as np
 # from msamsoa.utils.tracker import Tracker
