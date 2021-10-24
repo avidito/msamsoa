@@ -6,7 +6,6 @@ Base class for solution space, algorithm and agent (UAV) definition
 Include:
     - Solution (class): Base class for problem definition
     - Agent (class): Base class for agent entity
-    - check_boundary (function): Check whether a coordinate is inside or outside boundary.
 """
 
 import numpy as np
@@ -41,7 +40,7 @@ class Solution:
             for dx in range(-radar_range, radar_range):
                 x_read = x_pos + dx
                 y_read = y_pos + dy
-                if (check_boundary(x_read, y_read, len(visited_field))):
+                if (Solution.check_boundary(x_read, y_read, len(visited_field))):
                     visited_field[y_read, x_read] = True
         return visited_field
 
@@ -50,6 +49,14 @@ class Solution:
         logging.debug(f"Agent {agent.id:3} executing fertilization mission at {agent.position}")
         fertilized_field[agent.position] = True
         return fertilized_field
+
+    ##### Utilities Methods #####
+    @staticmethod
+    def check_boundary(x, y, boundary):
+        """
+        Check whether a coordinate is inside or outside boundary.
+        """
+        return (x >= 0 and x < boundary) and (y >= 0 and y < boundary)
 
 
 class Agent:
@@ -81,15 +88,14 @@ class Agent:
         for choice in self.move_direction:
             candidate_y = self.position[1] + choice[1]
             candidate_x = self.position[0] + choice[0]
-            if (check_boundary(candidate_x, candidate_y, self.boundary)) and (occupied_field[candidate_y, candidate_x] == False):
+            if (
+                (Solution.check_boundary(candidate_x, candidate_y, self.boundary)) and
+                (occupied_field[candidate_y, candidate_x] == False)
+            ):
                 available_grid.append((candidate_x, candidate_y))
         return available_grid
 
-def check_boundary(x, y, boundary):
-    """
-    Check whether a coordinate is inside or outside boundary.
-    """
-    return (x >= 0 and x < boundary) and (y >= 0 and y < boundary)
+
 
     #     def availableGrid(self, amap, target_direction):
     #         nw, nl = self.boundary

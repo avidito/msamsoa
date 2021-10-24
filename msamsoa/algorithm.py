@@ -1,3 +1,14 @@
+"""
+MSAMSOA Solution Implementation
+
+Solution implementation with MSAMSOA methods.
+
+Include:
+    - MSAMSOA (class): Modified Search-Attack Mission Self-Organized Algorithm (MSAMSOA) implementation in grid-based discrete problem space for crop field surveillance and fertilization. Targets are represented as 2D matrix with value 0 (fertilized) and 1 (unfertilized). Agents (UAV) represented as dot.
+    - MSAMSOA_Agent (class): MSAMSOA agent, or UAV representation for MSAMSOA solution.
+    - calculate_distance (function): Calculate distance between two grids.
+"""
+
 import numpy as np
 from numpy import random
 
@@ -17,29 +28,32 @@ class MSAMSOA(Solution):
     - a: float (default = 0.7);
     - b: float (default = 0.3);
     - d: int (default = 80);
-    - dtl0: float (default = 0.1);
-    - dtg0: float (default = 1.0);
+    - diff_local_pheromone: float (default = 1.0); Base pheromone for local reduction.
+    - diff_global_pheromone: float (default = 1.0); Base pheromone for global addition.
     - ht: int (default = 10);
     """
 
     ##### Initiation Methods #####
-    def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, dtl0=0.1, dtg0=1.0, ht=10):
+    def __init__(self, space, agents_cnt, a=0.7, b=0.3, d=80, diff_local_pheromone=0.1, diff_global_pheromone=1.0, ht=10):
         super().__init__(space)
         logging.info("Solution space update: Using MSAMSOA Algorithm")
 
         self.agents_cnt = agents_cnt
-        self.params = {
+        agents_params = {
             "a": a,
             "b": b,
+            "diff_local_pheromone": diff_local_pheromone,
+            "diff_global_pheromone": diff_global_pheromone
+        }
+        self.params = {
             "d": d,
-            "dtl0": dtl0,
-            "dtg0": dtg0,
-            "ht": ht
+            "ht": ht,
+            **agents_params
         }
         self.name = "MSAMSOA"
 
         logging.info("Populate agents with: count=%d; a=%.2f; b=%d", agents_cnt, a, b)
-        self.init_agents()
+        self.init_agents(**agents_params)
 
         logging.info("Space initialization and agents distribution is finish successfully")
 
@@ -47,9 +61,9 @@ class MSAMSOA(Solution):
         return ("SAMSOA Simulation. Agents:{}, a:{a}, b:{b}, d:{d}, dtl0:{dtl0}, dtg0:{dtg0}, ht:{ht}."
                 ).format(self.agents_cnt, *(self.params))
 
-    def init_agents(self):
+    def init_agents(self, a, b, diff_local_pheromone, diff_global_pheromone):
         self.agents = [
-            MSAMSOA_Agent(i, self.boundary, self.params["a"], self.params["b"])
+            MSAMSOA_Agent(i, self.boundary, a, b, diff_local_pheromone, diff_global_pheromone)
             for i in range(1, self.agents_cnt+1)
         ]
         self.random_pos_agents()
@@ -108,8 +122,6 @@ class MSAMSOA(Solution):
         iteration = 0
         detected_targets = []
         broken_agents = []
-        for agent in agents:
-            agent.set_mission("surveillance")
 
         target_cnt = self.size - np.sum(fertilized_field)
         tracking = Tracker(field_size=self.size, target_cnt=target_cnt)
@@ -150,6 +162,9 @@ class MSAMSOA(Solution):
                 visited_field = MSAMSOA.surveillance(agent, visited_field)
                 if (fertilized_field[agent.position] == False):
                     agent.set_mission("fertilization")
+
+            for agent in surveillance_agents:
+                agent.update_local_pheromone(surveillance_agents)
 
             # Reduce agents power
             for agent in agents:
@@ -248,18 +263,25 @@ class MSAMSOA_Agent(Agent):
     - boundary: int; Boundary location (x or y axis) of space field.
     - a: float;
     - b: float;
+    - diff_local_pheromone: float (default = 1.0); Base pheromone for local reduction.
+    - diff_global_pheromone: float (default = 1.0); Base pheromone for global addition.
     """
-    def __init__(self, idx, boundary, a, b):
+    def __init__(self, idx, boundary, a, b, diff_local_pheromone, diff_global_pheromone):
         super().__init__(idx, boundary)
         self.params = {
             "a": a,
-            "b": b
+            "b": b,
+            "diff_local_pheromone": diff_local_pheromone,
+            "diff_global_pheromone": diff_global_pheromone
         }
-        self.mission = None
+        self.mission = "surveillance"
+        self.power = 100
+
         self.move_direction = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
+        self.local_pheromone = np.full((boundary, boundary), 10, dtype=float)
+        self.convening_pheromone = np.zeros((boundary, boundary), dtype=float)
         self.hungry_point = 0
         self.hungry_state = False
-        self.power = 100
 
     ##### State #####
     def set_mission(self, mission):
@@ -286,6 +308,63 @@ class MSAMSOA_Agent(Agent):
     def get_fitness_score(self, grids):
         fitness = [random.randint(100) for grid in grids]
         return fitness
+
+    ##### Pheromone Management #####
+    def update_local_pheromone(self, surveillance_agents):
+        R = self.radar_range
+        F = random.random(1)[0]
+        x_pos, y_pos = self.position
+        diff_local_pheromone = self.params.get("diff_local_pheromone", 1.0)
+        diff_global_pheromone = self.params.get("diff_global_pheromone", 0.1)
+
+        for dy in range(-R, R):
+            for dx in range(-R, R):
+                x_grid = x_pos + dx
+                y_grid = y_pos + dy
+                if (MSAMSOA.check_boundary(x_grid, y_grid, self.boundary)):
+
+                    # Calculate reduction from other agents
+                    pheromone_reduction = 0
+                    local_agents = [
+                        (agent.position, np.linalg.norm(np.array([x_grid, y_grid]) - np.array(agent.position)))
+                        for agent in surveillance_agents
+                    ]
+                    for agent in local_agents:
+                        if ((agent[1]**4) <= R**4):
+                            pheromone_reduction += diff_local_pheromone * ((R**4) * (agent[1]**4))/(R**4)
+
+                    # Calculate global addition
+                    pheromone_addition = F * diff_global_pheromone
+
+                    self.local_pheromone[x_grid, y_grid] -= pheromone_reduction
+                    self.local_pheromone[x_grid, y_grid] += pheromone_addition
+
+    #         nw, nl = self.boundary
+    #         R = 2
+    #         d, dtl0, dtg0= self.params[2], self.params[3], self.params[4]
+    #
+    #         for idx in search_agents:
+    #             agent = self.agents[idx-1]
+    #             y, x = agent.position
+    #
+    #             # Memperbaharui Feromon Lokal
+    #             for dy in [-2, -1, 0, 1, 2]:
+    #                 for dx in [-2, -1, 0, 1, 2]:
+    #                     ny = y + dy
+    #                     nx = x + dx
+    #                     if(ny >= 0 and ny <= nw-1 and nx >= 0 and nx <= nl-1):
+    #                         for oa_idx in search_agents:
+    #                             other_agent = self.agents[oa_idx-1]
+    #                             oay, oax = other_agent.position
+    #                             dis = np.sqrt((oay - ny)**2 + (oax - nx)**2)
+    #                             dt = dtl0 * (R**4 - dis**4)/(R**4) if R**4 >= dis**4 else 0
+    #                             agent.p[ny, nx] = max(agent.p[ny, nx] - dt, 1e-15)
+    #
+    #             # Memperbaharui Feromon Penyusun
+    #             for (ty, tx) in target_list:
+    #                 if(agent.cp[ty, tx] == 0):
+    #                     pow_dis = (ty - y)**2 + (tx - x)**2
+    #                     agent.cp[ty, tx] = dtg0 * np.exp(-pow_dis/(2*(d**2)))
 
 # import numpy as np
 # from msamsoa.utils.tracker import Tracker
