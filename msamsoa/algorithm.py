@@ -116,15 +116,21 @@ class MSAMSOA(Solution):
         tracking.add_snapshot(0, visited_field, fertilized_field, agents)
 
         while(
-            (sum(sum(fertilized_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
-            and iteration < max_iteration                                # or iteration lower than max_iteration
+            (np.sum(visited_field) < self.size or detected_targets) # While surveillance and fertilization not completed
+            and iteration < max_iteration                           # or iteration lower than max_iteration
         ):
+            # Calculating completion rate
             iteration += 1
-            logging.info(f"Starting iteration {iteration:4}")
+            s_rate = np.sum(visited_field)/self.size
+            f_rate = (target_cnt - (self.size - np.sum(fertilized_field))) / target_cnt
 
             # Grouping agent by mission
             surveillance_agents = [agent for agent in agents if (agent.mission == "surveillance")]
             fertilization_agents = [agent for agent in agents if (agent.mission == "fertilization")]
+            logging.info(
+                f"Starting iteration {iteration:4}. Surveillance: {s_rate*100:6.2f}%. Fertilization: {f_rate*100:6.2f}%. "
+                f"Surveillance Agents: {len(surveillance_agents):3}. Fertilization Agents: {len(fertilization_agents):3}"
+            )
 
             # Fertilization
             for agent in fertilization_agents:
