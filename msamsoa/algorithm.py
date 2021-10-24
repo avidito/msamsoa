@@ -100,9 +100,9 @@ class MSAMSOA(Solution):
         """
         bound = self.boundary
         ht = self.params["ht"]
-        fertilized_field = self.space.copy()
         visited_field = np.zeros((bound, bound), bool)
         occupied_field = np.zeros((bound, bound), bool)
+        fertilized_field = self.space.copy()
         agents = self.agents.copy()
 
         iteration = 0
@@ -111,8 +111,9 @@ class MSAMSOA(Solution):
         for agent in agents:
             agent.set_mission("surveillance")
 
-        tracking = Tracker(field_size=self.size)
-        tracking.add_snapshot(0, fertilized_field, visited_field, agents)
+        target_cnt = self.size - np.sum(fertilized_field)
+        tracking = Tracker(field_size=self.size, target_cnt=target_cnt)
+        tracking.add_snapshot(0, visited_field, fertilized_field, agents)
 
         while(
             (sum(sum(fertilized_field)) < self.size or detected_targets) # While surveillance and fertilization not completed
@@ -143,7 +144,7 @@ class MSAMSOA(Solution):
                 agent.reduce_power(1)
 
             # Take progress snapshot
-            tracking.add_snapshot(iteration, fertilized_field, visited_field, agents)
+            tracking.add_snapshot(iteration, visited_field, fertilized_field, agents)
 
                 #     search_agents = []
                 #     for agent in self.agents:
