@@ -49,14 +49,16 @@ class Visualizer:
             "fertilization": summary.get("fertilization_rate", 0)
         }
         agents_cnt = summary.get("active_agents", 0)
-        Visualizer.visualize_field(fertilized, agents, completion_rate, agents_cnt, iteration=p-1)
+        Visualizer.visualize_field(fertilized, agents, completion_rate, agents_cnt, iteration=p-1, boundary=len(fertilized))
 
     ##### Visualization Utils #####
     @staticmethod
-    def visualize_field(data, agents, completion_rate, agents_cnt, iteration=0):
+    def visualize_field(data, agents, completion_rate, agents_cnt, iteration=0, boundary=100):
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
+        viz.axes.set_xlim(0, boundary)
+        viz.axes.set_ylim(0, boundary)
 
         divider = make_axes_locatable(viz.axes)
         Visualizer.visualize_colorbar(divider)
