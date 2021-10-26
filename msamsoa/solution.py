@@ -30,34 +30,6 @@ class Solution:
         self.target_cnt = self.size - sum(sum(space))
         self.name = "__BASE__"
 
-    ##### Mission Methods #####
-    @staticmethod
-    def fertilization(agent, fertilized_field, detected_targets):
-        logging.debug(f"Agent {agent.id:3} executing fertilization mission at {agent.position}")
-
-        x_pos, y_pos = agent.position
-        fertilized_field[x_pos, y_pos] = True
-        detected_targets.remove((x_pos, y_pos))
-        return fertilized_field, detected_targets
-
-    @staticmethod
-    def surveillance(agent, visited_field, fertilized_field, detected_targets):
-        logging.debug(f"Agent {agent.id:3} executing surveillance mission at {agent.position}")
-        [x_pos, y_pos] = agent.position
-        radar_range = agent.radar_range
-
-        new_grid_cnt = 0
-        for dy in range(-radar_range, radar_range):
-            for dx in range(-radar_range, radar_range):
-                x_read = x_pos + dx
-                y_read = y_pos + dy
-                if (Solution.check_boundary(x_read, y_read, len(visited_field))):
-                    visited_field[x_read, y_read] = True
-                    new_grid_cnt += 1
-                    if (fertilized_field[x_read, y_read] == False):
-                        detected_targets.add((x_read, y_read))
-        return visited_field, detected_targets, new_grid_cnt
-
     ##### Utilities Methods #####
     @staticmethod
     def check_boundary(x, y, boundary):
@@ -91,8 +63,8 @@ class Agent:
     def get_available_grid(self, occupied_field):
         available_grid = []
         for choice in self.move_direction:
-            candidate_y = self.position[1] + choice[1]
             candidate_x = self.position[0] + choice[0]
+            candidate_y = self.position[1] + choice[1]
             if (
                 (Solution.check_boundary(candidate_x, candidate_y, self.boundary)) and
                 (occupied_field[candidate_x, candidate_y] == False)
