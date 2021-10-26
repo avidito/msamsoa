@@ -72,8 +72,6 @@ class Agent:
                 available_grid.append((candidate_x, candidate_y))
         return available_grid
 
-
-
     #     def availableGrid(self, amap, target_direction):
     #         nw, nl = self.boundary
     #         y, x = self.position

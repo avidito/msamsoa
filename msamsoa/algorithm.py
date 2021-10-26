@@ -139,7 +139,7 @@ class MSAMSOA(Solution):
                 f"Starting iteration {iteration:4}. Surveillance: {s_rate*100:6.2f}%. Fertilization: {f_rate*100:6.2f}%. "
                 f"Surveillance Agents: {len(surveillance_agents):3}. Fertilization Agents: {len(fertilization_agents):3}"
             )
-            
+
             # Fertilization
             for agent in fertilization_agents:
                 fertilized_field, detected_targets = MSAMSOA.fertilization(agent, fertilized_field, detected_targets)
@@ -150,7 +150,7 @@ class MSAMSOA(Solution):
             # Surveillance
             for agent in surveillance_agents:
                 # Move agent
-                origin, destination = agent.move(occupied_field)
+                origin, destination = agent.move(occupied_field, detected_targets)
                 if (Solution.check_boundary(origin[0], origin[1], bound)):
                     occupied_field[origin[0], origin[1]] = False
                 occupied_field[destination[0], destination[1]] = True
@@ -345,8 +345,8 @@ class MSAMSOA_Agent(Agent):
                 self.mission = None # Broken/Dead
 
     ##### Navigation #####
-    def move(self, occupied_field):
-        available_grid = self.get_available_grid(occupied_field)
+    def move(self, occupied_field, target_list):
+        available_grid = self.get_available_grid(occupied_field, target_list)
         grid_fitness = self.get_fitness_score(available_grid)
         grid_choices = list(zip(available_grid, grid_fitness))
         best_grid = max(grid_choices, key=lambda x: x[1])
@@ -355,6 +355,27 @@ class MSAMSOA_Agent(Agent):
         self.position = best_grid[0]
         destination = self.position
         return origin, destination
+
+    def get_available_grid(self, occupied_field, target_list):
+        available_grid = super().get_available_grid(occupied_field)
+        if (self.hungry_state):
+            focus_grid = self.get_direction_to_nearest_target(available_grid, target_list)
+            return focus_grid
+        else:
+            return available_grid
+
+    def get_direction_to_nearest_target(self, available_grid, target_list):
+        dist = [
+            [target, np.linalg.norm(np.array(self.position) - np.array(target))]
+            for target in target_list
+        ]
+        nearest_target = min(dist, key=lambda p: p[1])[0]
+        focus_direction = MSAMSOA_Agent.get_direction(self.position, nearest_target)
+        focus_grid = [
+            grid for grid in available_grid
+            if (SAMSOA_Agent.get_direction(self.position, grid) == focus_direction)
+        ]
+        return focus_grid
 
     def get_fitness_score(self, grids):
         a = self.params.get("a", 0.7)
@@ -366,6 +387,13 @@ class MSAMSOA_Agent(Agent):
             fitness = a * (self.local_pheromone[x_pos, y_pos] + self.convening_pheromone[x_pos, y_pos])
             grid_fitness.append(fitness)
         return grid_fitness
+
+    @staticmethod
+    def get_direction(p1, p2):
+        x_vector, y_vector = np.array(p2) - np.array(p1)
+        x_direction = 0 if (x_vector == 0) else min(x_vector, 1) if (x_vector >= 0) else max(x_vector, -1)
+        y_direction = 0 if (x_vector == 0) else min(y_vector, 1) if (y_vector >= 0) else max(y_vector, -1)
+        return (x_direction, y_direction)
 
     ##### Pheromone Management #####
     def update_local_pheromone(self, surveillance_agents):
