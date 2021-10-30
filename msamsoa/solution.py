@@ -6,7 +6,6 @@ Base class for solution space, algorithm and agent (UAV) definition
 Include:
     - Solution (class): Base class for problem definition
     - Agent (class): Base class for agent entity
-    - check_boundary (function): Check whether a coordinate is inside or outside boundary.
 """
 
 import numpy as np
@@ -31,22 +30,14 @@ class Solution:
         self.target_cnt = self.size - sum(sum(space))
         self.name = "__BASE__"
 
-    ##### Mission Methods #####
+    ##### Utilities Methods #####
     @staticmethod
-    def surveillance(agents, visited_field):
-        [x_pos, y_pos] = agents.position
-        radar_range = agents.radar_range
-        for dy in range(-radar_range, radar_range):
-            for dx in range(-radar_range, radar_range):
-                x_read = x_pos + dx
-                y_read = y_pos + dy
-                if (check_boundary(x_read, y_read, len(visited_field))):
-                    visited_field[y_read, x_read] = True
-        return visited_field
+    def check_boundary(x, y, boundary):
+        """
+        Check whether a coordinate is inside or outside boundary.
+        """
+        return (x >= 0 and x < boundary) and (y >= 0 and y < boundary)
 
-    @staticmethod
-    def fertilization(agents, fertilized_field):
-        pass
 
 class Agent:
     """
@@ -69,23 +60,17 @@ class Agent:
         self.radar_range = 2
 
     ##### Navigation #####
-    def move(self):
-        pass
-
     def get_available_grid(self, occupied_field):
         available_grid = []
         for choice in self.move_direction:
-            candidate_y = self.position[1] + choice[1]
             candidate_x = self.position[0] + choice[0]
-            if (check_boundary(candidate_x, candidate_y, self.boundary)) and (occupied_field[candidate_y, candidate_x] == False):
+            candidate_y = self.position[1] + choice[1]
+            if (
+                (Solution.check_boundary(candidate_x, candidate_y, self.boundary)) and
+                (occupied_field[candidate_x, candidate_y] == False)
+            ):
                 available_grid.append((candidate_x, candidate_y))
         return available_grid
-
-def check_boundary(x, y, boundary):
-    """
-    Check whether a coordinate is inside or outside boundary.
-    """
-    return (x >= 0 and x < boundary) and (y >= 0 and y < boundary)
 
     #     def availableGrid(self, amap, target_direction):
     #         nw, nl = self.boundary

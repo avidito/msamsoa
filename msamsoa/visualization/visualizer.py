@@ -57,8 +57,8 @@ class Visualizer:
         viz = plt.imshow(data, interpolation="none", cmap="gray", vmin=-1, vmax=1)
         viz.axes.xaxis.set_visible(False)
         viz.axes.yaxis.set_visible(False)
-        viz.axes.set_xlim(0, boundary)
-        viz.axes.set_ylim(0, boundary)
+        viz.axes.set_xlim(0, boundary-1)
+        viz.axes.set_ylim(0, boundary-1)
 
         divider = make_axes_locatable(viz.axes)
         Visualizer.visualize_colorbar(divider)
