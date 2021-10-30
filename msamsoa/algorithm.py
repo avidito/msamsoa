@@ -150,7 +150,7 @@ class MSAMSOA(Solution):
             # Surveillance
             for agent in surveillance_agents:
                 # Move agent
-                origin, destination = agent.move(occupied_field, detected_targets)
+                origin, destination = agent.move(occupied_field, detected_targets, visited_field)
                 if (Solution.check_boundary(origin[0], origin[1], bound)):
                     occupied_field[origin[0], origin[1]] = False
                 occupied_field[destination[0], destination[1]] = True
@@ -345,9 +345,9 @@ class MSAMSOA_Agent(Agent):
                 self.mission = None # Broken/Dead
 
     ##### Navigation #####
-    def move(self, occupied_field, target_list):
+    def move(self, occupied_field, target_list, visited_field):
         available_grid = self.get_available_grid(occupied_field, target_list)
-        grid_fitness = self.get_fitness_score(available_grid)
+        grid_fitness = self.get_fitness_score(available_grid, visited_field)
         grid_choices = list(zip(available_grid, grid_fitness))
         best_grid = max(grid_choices, key=lambda x: x[1])
 
@@ -377,16 +377,23 @@ class MSAMSOA_Agent(Agent):
         ]
         return focus_grid
 
-    def get_fitness_score(self, grids):
+    def get_fitness_score(self, grids, visited_field):
         a = self.params.get("a", 0.7)
         b = self.params.get("b", 0.3)
 
         grid_fitness = []
         for grid in grids:
             x_pos, y_pos = grid
-            fitness = a * (self.local_pheromone[x_pos, y_pos] + self.convening_pheromone[x_pos, y_pos])
+            fitness = a * (self.local_pheromone[x_pos, y_pos] + self.convening_pheromone[x_pos, y_pos]) + b * self.get_heuristic_score(x_pos, y_pos, visited_field)
             grid_fitness.append(fitness)
         return grid_fitness
+
+    def get_heuristic_score(self, x_pos, y_pos, visited_field):
+        x_min, x_max = max(x_pos-1, 0), min(x_pos+2, self.boundary)
+        y_min, y_max = max(y_pos-1, 0), min(y_pos+2, self.boundary)
+        candidate_search_area = visited_field[x_min:x_max, y_min:y_max]
+        heuristic_score = np.size(candidate_search_area) - np.sum(candidate_search_area)
+        return heuristic_score
 
     @staticmethod
     def get_direction(p1, p2):
@@ -407,7 +414,7 @@ class MSAMSOA_Agent(Agent):
             for dx in range(-R, R):
                 x_grid = x_pos + dx
                 y_grid = y_pos + dy
-                if (MSAMSOA.check_boundary(x_grid, y_grid, self.boundary)):
+                if (Solution.check_boundary(x_grid, y_grid, self.boundary)):
 
                     # Calculate reduction from other agents
                     pheromone_reduction = 0
